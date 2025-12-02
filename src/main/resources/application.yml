@@ -1,0 +1,233 @@
+spring:
+  application:
+    name: voto
+
+  profiles:
+    active: ${SPRING_PROFILE:dev}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+    default-property-inclusion: non_null
+
+server:
+  port: 8080
+  compression:
+    enabled: true
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+  level:
+    root: INFO
+    com.votoeletronico.voto: DEBUG
+    org.springframework.security: DEBUG
+
+---
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/voto_dev
+    username: voto_user
+    password: ${DB_PASSWORD:123456}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        generate_statistics: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://localhost:8081/realms/voto}
+          jwk-set-uri: ${OAUTH2_JWK_SET_URI:http://localhost:8081/realms/voto/protocol/openid-connect/certs}
+
+server:
+  error:
+    include-stacktrace: on_param
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+app:
+  crypto:
+    key-store-path: ${KEY_STORE_PATH:./config/keystore.p12}
+    key-store-password: ${KEY_STORE_PASSWORD:changeit}
+
+  audit:
+    enabled: true
+    batch-size: 100
+
+  vote:
+    token-expiration-minutes: 30
+    max-votes-per-election: 100000
+
+---
+# Staging Profile
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/voto_staging
+    username: ${DB_USERNAME:voto_user}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    show-sql: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI}
+          jwk-set-uri: ${OAUTH2_JWK_SET_URI}
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-stacktrace: never
+
+logging:
+  level:
+    root: INFO
+    com.votoeletronico.voto: INFO
+    org.springframework.security: INFO
+
+app:
+  crypto:
+    key-store-path: ${KEY_STORE_PATH}
+    key-store-password: ${KEY_STORE_PASSWORD}
+
+  audit:
+    enabled: true
+    batch-size: 500
+
+  vote:
+    token-expiration-minutes: 30
+    max-votes-per-election: 1000000
+
+---
+# Production Profile
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+      connection-timeout: 20000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        generate_statistics: true
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI}
+          jwk-set-uri: ${OAUTH2_JWK_SET_URI}
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+    include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+
+logging:
+  level:
+    root: WARN
+    com.votoeletronico.voto: INFO
+    org.springframework.security: WARN
+
+app:
+  crypto:
+    key-store-path: ${KEY_STORE_PATH}
+    key-store-password: ${KEY_STORE_PASSWORD}
+
+  audit:
+    enabled: true
+    batch-size: 1000
+
+  vote:
+    token-expiration-minutes: 30
+    max-votes-per-election: 10000000

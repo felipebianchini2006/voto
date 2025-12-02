@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProperty scope="context" name="springAppName" source="spring.application.name"/>
+    <springProperty scope="context" name="springProfile" source="spring.profiles.active"/>
+
+    <!-- Console Appender - Plain text for development -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Console JSON Appender - Structured logging for production -->
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <includeMdcKeyName>electionId</includeMdcKeyName>
+            <includeMdcKeyName>voterId</includeMdcKeyName>
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <level>level</level>
+                <levelValue>[ignore]</levelValue>
+            </fieldNames>
+            <customFields>{"application":"${springAppName}","profile":"${springProfile}"}</customFields>
+            <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                <maxDepthPerThrowable>30</maxDepthPerThrowable>
+                <maxLength>2048</maxLength>
+                <shortenedClassNameLength>20</shortenedClassNameLength>
+                <exclude>^sun\.reflect\..*\.invoke</exclude>
+                <exclude>^net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
+                <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+                    <marker>CONFIDENTIAL</marker>
+                </evaluator>
+                <rootCauseFirst>true</rootCauseFirst>
+            </throwableConverter>
+        </encoder>
+    </appender>
+
+    <!-- File Appender - JSON logs to file -->
+    <appender name="FILE_JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/application.json</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>spanId</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <includeMdcKeyName>electionId</includeMdcKeyName>
+            <includeMdcKeyName>voterId</includeMdcKeyName>
+            <customFields>{"application":"${springAppName}","profile":"${springProfile}"}</customFields>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/application.%d{yyyy-MM-dd}.json.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Audit Log Appender - Separate file for audit events -->
+    <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/audit.json</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"type":"audit","application":"${springAppName}"}</customFields>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/audit.%d{yyyy-MM-dd}.json.gz</fileNamePattern>
+            <maxHistory>365</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Audit Logger - Dedicated logger for audit events -->
+    <logger name="com.votoeletronico.voto.audit" level="INFO" additivity="false">
+        <appender-ref ref="AUDIT_FILE"/>
+        <appender-ref ref="CONSOLE_JSON"/>
+    </logger>
+
+    <!-- Security Logger -->
+    <logger name="org.springframework.security" level="DEBUG" additivity="false">
+        <appender-ref ref="FILE_JSON"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Development Profile - Plain text console -->
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        <logger name="com.votoeletronico.voto" level="DEBUG"/>
+        <logger name="org.springframework.web" level="DEBUG"/>
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
+        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+    </springProfile>
+
+    <!-- Staging Profile - JSON console + file -->
+    <springProfile name="staging">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_JSON"/>
+            <appender-ref ref="FILE_JSON"/>
+        </root>
+        <logger name="com.votoeletronico.voto" level="INFO"/>
+        <logger name="org.springframework" level="WARN"/>
+    </springProfile>
+
+    <!-- Production Profile - JSON only, minimal logging -->
+    <springProfile name="prod">
+        <root level="WARN">
+            <appender-ref ref="CONSOLE_JSON"/>
+            <appender-ref ref="FILE_JSON"/>
+        </root>
+        <logger name="com.votoeletronico.voto" level="INFO"/>
+        <logger name="org.springframework.security" level="WARN"/>
+    </springProfile>
+
+</configuration>

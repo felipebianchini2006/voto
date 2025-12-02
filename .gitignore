@@ -33,3 +33,25 @@ build/
 .vscode/
 
 *CLAUDE.md
+*.claude
+
+### Environment Variables ###
+.env
+.env.local
+.env.*.local
+
+### Crypto Keys ###
+config/keystore.p12
+*.p12
+*.jks
+*.key
+*.pem
+
+### Docker ###
+docker/postgres/data/
+
+### Logs ###
+logs/
+*.log
+PLANEJAMENTO_DESENVOLVIMENTO.md
+FASE1_COMPLETA.md

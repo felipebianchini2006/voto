@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: voto-test
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    clean-disabled: false
+
+logging:
+  level:
+    root: INFO
+    com.votoeletronico.voto: DEBUG
+    org.springframework.security: DEBUG
+    org.testcontainers: INFO
+
+app:
+  crypto:
+    key-store-path: src/test/resources/test-keystore.p12
+    key-store-password: test123
+
+  audit:
+    enabled: true
+    batch-size: 10
+
+  vote:
+    token-expiration-minutes: 5
+    max-votes-per-election: 1000
