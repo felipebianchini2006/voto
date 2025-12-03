@@ -1,0 +1,239 @@
+package com.votoeletronico.voto.controller.voting;
+
+import com.votoeletronico.voto.domain.voting.EncryptedBallot;
+import com.votoeletronico.voto.dto.request.CastAbstentionRequest;
+import com.votoeletronico.voto.dto.request.CastVoteRequest;
+import com.votoeletronico.voto.dto.request.TokenRequest;
+import com.votoeletronico.voto.dto.response.BallotVerificationResponse;
+import com.votoeletronico.voto.dto.response.TokenResponse;
+import com.votoeletronico.voto.dto.response.VoteReceiptResponse;
+import com.votoeletronico.voto.dto.response.VotingStatsResponse;
+import com.votoeletronico.voto.service.TokenService;
+import com.votoeletronico.voto.service.VotingService;
+import com.votoeletronico.voto.service.crypto.CryptoService;
+import com.votoeletronico.voto.domain.voting.BlindToken;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * Public endpoints for voting
+ * These endpoints are accessible to voters (not admin-only)
+ */
+@Tag(name = "Voting", description = "Public voting endpoints")
+@RestController
+@RequestMapping("/api/voting/elections/{electionId}")
+@RequiredArgsConstructor
+public class VotingController {
+
+    private final TokenService tokenService;
+    private final VotingService votingService;
+    private final CryptoService cryptoService;
+
+    @Operation(
+            summary = "Request a blind token",
+            description = """
+                    Request a blind token for voting. The voter must be registered and eligible.
+                    The token is anonymous and cannot be linked back to the voter identity.
+
+                    IMPORTANT: Store the returned token securely - it will NOT be stored by the system!
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Token issued successfully"),
+            @ApiResponse(responseCode = "400", description = "Voter not eligible or already has token"),
+            @ApiResponse(responseCode = "404", description = "Election or voter not found")
+    })
+    @PostMapping("/token")
+    public ResponseEntity<TokenResponse> requestToken(
+            @PathVariable UUID electionId,
+            @Valid @RequestBody TokenRequest request) {
+
+        BlindToken token = tokenService.issueToken(electionId, request.externalId());
+
+        // Get public key for verification
+        String publicKey = tokenService.getElectionPublicKey(electionId);
+
+        // Generate actual token value (this is what voter uses to vote)
+        String tokenValue = cryptoService.generateSecureToken();
+
+        TokenResponse response = new TokenResponse(
+                token.getId(),
+                electionId,
+                token.getStatus(),
+                token.getIssuedAt(),
+                token.getExpiresAt(),
+                token.getSignature(),
+                token.getNonce(),
+                publicKey,
+                tokenValue
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(
+            summary = "Cast a vote",
+            description = """
+                    Cast an encrypted vote for a candidate using a blind token.
+                    The vote is anonymous and cannot be linked to voter identity.
+
+                    Returns a receipt with ballot hash for verification.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Vote cast successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid token or election not open"),
+            @ApiResponse(responseCode = "404", description = "Election or candidate not found")
+    })
+    @PostMapping("/vote")
+    public ResponseEntity<VoteReceiptResponse> castVote(
+            @PathVariable UUID electionId,
+            @Valid @RequestBody CastVoteRequest request,
+            HttpServletRequest httpRequest) {
+
+        String ipAddress = httpRequest.getRemoteAddr();
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        EncryptedBallot ballot = votingService.castVote(
+                electionId,
+                request.token(),
+                request.candidateId(),
+                ipAddress,
+                userAgent
+        );
+
+        VoteReceiptResponse response = new VoteReceiptResponse(
+                ballot.getId(),
+                ballot.getBallotHash(),
+                ballot.getCastAt(),
+                ballot.getVerificationSignature()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(
+            summary = "Cast abstention",
+            description = """
+                    Cast an abstention vote (choosing not to vote for any candidate).
+                    May require justification depending on election settings.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Abstention recorded"),
+            @ApiResponse(responseCode = "400", description = "Abstention not allowed or justification required"),
+            @ApiResponse(responseCode = "404", description = "Election not found")
+    })
+    @PostMapping("/abstain")
+    public ResponseEntity<VoteReceiptResponse> castAbstention(
+            @PathVariable UUID electionId,
+            @Valid @RequestBody CastAbstentionRequest request,
+            HttpServletRequest httpRequest) {
+
+        String ipAddress = httpRequest.getRemoteAddr();
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        EncryptedBallot ballot = votingService.castAbstention(
+                electionId,
+                request.token(),
+                request.justification(),
+                ipAddress,
+                userAgent
+        );
+
+        VoteReceiptResponse response = new VoteReceiptResponse(
+                ballot.getId(),
+                ballot.getBallotHash(),
+                ballot.getCastAt(),
+                ballot.getVerificationSignature()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @Operation(
+            summary = "Verify ballot receipt",
+            description = """
+                    Verify that your vote was recorded by providing your ballot hash.
+                    This proves your vote is in the system without revealing how you voted.
+                    """
+    )
+    @GetMapping("/verify/{ballotHash}")
+    public ResponseEntity<BallotVerificationResponse> verifyBallot(
+            @PathVariable UUID electionId,
+            @Parameter(description = "Ballot hash from your receipt")
+            @PathVariable String ballotHash) {
+
+        var ballot = votingService.getBallotByHash(ballotHash);
+
+        if (ballot.isEmpty()) {
+            return ResponseEntity.ok(BallotVerificationResponse.notFound());
+        }
+
+        EncryptedBallot found = ballot.get();
+
+        // Verify belongs to correct election
+        if (!found.getElection().getId().equals(electionId)) {
+            return ResponseEntity.ok(BallotVerificationResponse.notFound());
+        }
+
+        BallotVerificationResponse response = BallotVerificationResponse.found(
+                found.getCastAt(),
+                found.getTallied()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Get voting statistics",
+            description = "Get public statistics about voting progress (admin/auditor only)"
+    )
+    @GetMapping("/stats")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OPERATOR', 'AUDITOR')")
+    public ResponseEntity<VotingStatsResponse> getVotingStats(@PathVariable UUID electionId) {
+        Map<String, Long> tokenStats = tokenService.getTokenStatistics(electionId);
+        Map<String, Long> ballotStats = votingService.getVotingStatistics(electionId);
+
+        VotingStatsResponse response = new VotingStatsResponse(
+                electionId,
+                tokenStats.get("total"),
+                tokenStats.get("consumed"),
+                tokenStats.get("issued"),
+                ballotStats.get("totalBallots"),
+                ballotStats.get("talliedBallots"),
+                ballotStats.get("pendingBallots")
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(
+            summary = "Verify ballot chain integrity",
+            description = "Verify the integrity of the ballot hash chain (admin/auditor only)"
+    )
+    @GetMapping("/verify-chain")
+    @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR')")
+    public ResponseEntity<Map<String, Object>> verifyChain(@PathVariable UUID electionId) {
+        boolean valid = votingService.verifyBallotChain(electionId);
+
+        return ResponseEntity.ok(Map.of(
+                "electionId", electionId,
+                "chainValid", valid,
+                "message", valid ? "Ballot chain is valid" : "Ballot chain integrity check failed"
+        ));
+    }
+}
