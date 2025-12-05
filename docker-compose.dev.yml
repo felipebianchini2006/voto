@@ -1,12 +1,13 @@
+# Docker Compose for Development with Hot Reload
 version: '3.8'
 
 services:
-  # Backend - Spring Boot Application
+  # Backend - Spring Boot with DevTools
   backend:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: voto-backend
+      dockerfile: Dockerfile.dev
+    container_name: voto-backend-dev
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: dev
@@ -14,39 +15,37 @@ services:
       SPRING_DATASOURCE_USERNAME: voto_user
       SPRING_DATASOURCE_PASSWORD: 123456
       SERVER_PORT: 8080
+      SPRING_DEVTOOLS_RESTART_ENABLED: "true"
     ports:
       - "8080:8080"
+      - "5005:5005"  # Debug port
+    volumes:
+      - ./src:/app/src
+      - ./target:/app/target
+      - maven_cache:/root/.m2
     networks:
       - voto-network
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 40s
+    command: ./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 
-  # Frontend - React/Vite Application
+  # Frontend - Vite Dev Server with Hot Reload
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: voto-frontend
+    image: node:20-alpine
+    container_name: voto-frontend-dev
     restart: unless-stopped
+    working_dir: /app
     ports:
-      - "80:80"
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     networks:
       - voto-network
     depends_on:
       - backend
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
-      interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
 
   # Database - PostgreSQL
   postgres:
@@ -71,7 +70,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # PgAdmin - Database Management (Optional)
+  # PgAdmin - Database Management
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: voto-pgadmin
@@ -88,35 +87,13 @@ services:
       - voto-network
     depends_on:
       - postgres
-    profiles:
-      - tools
-
-  # Redis - Cache and Rate Limiting (Future)
-  redis:
-    image: redis:7-alpine
-    container_name: voto-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - voto-network
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-    profiles:
-      - tools
 
 volumes:
   postgres_data:
     driver: local
   pgadmin_data:
     driver: local
-  redis_data:
+  maven_cache:
     driver: local
 
 networks:

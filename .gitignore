@@ -70,3 +70,12 @@ test-full.txt
 test-debug.txt
 test-output.txt
 test-stack.txt
+.github/copilot-instructions.md
+DOCKER-ARCHITECTURE.md
+DOCKER-CHECKLIST.md
+DOCKER-INDEX.md
+DOCKER-SUMMARY.md
+DOCKER-SETUP.md
+README-DOCKER.md
+docker.bat
+docker.sh
