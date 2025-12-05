@@ -101,6 +101,13 @@ public class BlindToken extends BaseEntity {
     @Column(name = "ballot_id")
     private UUID ballotId;
 
+    /**
+     * The actual token value (NOT persisted - returned to voter only once)
+     * This is a transient field that holds the token value for returning to the voter
+     */
+    @Transient
+    private String tokenValue;
+
     // Business methods
 
     /**

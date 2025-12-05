@@ -12,7 +12,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { electionService } from '../../services/electionService';
-import { CreateElectionRequest } from '../../types';
+import type { CreateElectionRequest } from '../../types';
 
 export const ElectionFormPage: React.FC = () => {
     const navigate = useNavigate();
@@ -64,7 +64,7 @@ export const ElectionFormPage: React.FC = () => {
             <Paper sx={{ p: 4 }}>
                 <form onSubmit={handleSubmit}>
                     <Grid container spacing={3}>
-                        <Grid item xs={12}>
+                        <Grid size={12}>
                             <TextField
                                 fullWidth
                                 label="Nome da Eleição"
@@ -75,7 +75,7 @@ export const ElectionFormPage: React.FC = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12}>
+                        <Grid size={12}>
                             <TextField
                                 fullWidth
                                 label="Descrição"
@@ -87,7 +87,7 @@ export const ElectionFormPage: React.FC = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 type="datetime-local"
@@ -100,7 +100,7 @@ export const ElectionFormPage: React.FC = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 type="datetime-local"
@@ -113,7 +113,7 @@ export const ElectionFormPage: React.FC = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <TextField
                                 fullWidth
                                 type="number"
@@ -125,7 +125,7 @@ export const ElectionFormPage: React.FC = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid size={{ xs: 12, md: 6 }}>
                             <FormControlLabel
                                 control={
                                     <Switch
@@ -138,7 +138,7 @@ export const ElectionFormPage: React.FC = () => {
                             />
                         </Grid>
 
-                        <Grid item xs={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                        <Grid size={12} sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                             <Button variant="outlined" onClick={() => navigate('/admin')}>
                                 Cancelar
                             </Button>

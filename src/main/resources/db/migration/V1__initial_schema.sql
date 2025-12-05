@@ -357,11 +357,16 @@ INSERT INTO admin_users (username, email, role) VALUES
     ('auditor', 'auditor@voto.local', 'AUDITOR');
 
 -- ============================================================================
--- GRANTS
+-- GRANTS (conditional - only if voto_user exists)
 -- ============================================================================
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO voto_user;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO voto_user;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA audit TO voto_user;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA audit TO voto_user;
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_roles WHERE rolname = 'voto_user') THEN
+        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO voto_user;
+        GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO voto_user;
+        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA audit TO voto_user;
+        GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA audit TO voto_user;
+    END IF;
+END $$;
 
 -- End of migration

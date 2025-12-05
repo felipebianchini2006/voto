@@ -36,7 +36,6 @@ public class Election extends BaseEntity {
     private String description;
 
     @NotNull(message = "Start timestamp is required")
-    @Future(message = "Start timestamp must be in the future")
     @Column(name = "start_ts", nullable = false)
     private Instant startTs;
 

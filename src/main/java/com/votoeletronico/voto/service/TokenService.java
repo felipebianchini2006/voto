@@ -102,6 +102,10 @@ public class TokenService {
         BlindToken saved = tokenRepository.save(token);
         log.info("Token issued successfully: {}", saved.getId());
 
+        // Set the transient tokenValue field for returning to the voter
+        // This value is NOT stored in the database
+        saved.setTokenValue(tokenValue);
+
         // Audit log
         auditService.logEvent(AuditEventType.VOTER_REGISTERED, Map.of(
                 "electionId", electionId.toString(),
@@ -109,10 +113,6 @@ public class TokenService {
                 "action", "Token Issued"
         ));
 
-        // In a real system, the tokenValue would be returned to the voter
-        // and stored securely by them (not in our database)
-        // For now, we'll attach it as a transient field for demonstration
-        // Note: In production, use a separate DTO for this
         return saved;
     }
 

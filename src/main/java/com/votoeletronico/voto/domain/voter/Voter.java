@@ -29,7 +29,6 @@ import java.util.UUID;
                 @Index(name = "idx_voters_eligible", columnList = "election_id, eligible")
         })
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -50,7 +49,6 @@ public class Voter {
     @Column(name = "external_id", nullable = false)
     private String externalId;
 
-    @NotBlank(message = "External ID hash is required")
     @Size(max = 64)
     @Column(name = "external_id_hash", nullable = false, length = 64)
     private String externalIdHash;
@@ -76,6 +74,50 @@ public class Voter {
     @Column(name = "registered_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant registeredAt = Instant.now();
+
+    // Setters with automatic hash computation
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setElection(Election election) {
+        this.election = election;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
+        if (externalId != null) {
+            this.externalIdHash = hashSHA256(externalId);
+        }
+    }
+
+    public void setExternalIdHash(String externalIdHash) {
+        this.externalIdHash = externalIdHash;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+        if (email != null) {
+            this.emailHash = hashSHA256(email);
+        }
+    }
+
+    public void setEmailHash(String emailHash) {
+        this.emailHash = emailHash;
+    }
+
+    public void setEligible(Boolean eligible) {
+        this.eligible = eligible;
+    }
+
+    public void setIneligibilityReason(String ineligibilityReason) {
+        this.ineligibilityReason = ineligibilityReason;
+    }
+
+    public void setRegisteredAt(Instant registeredAt) {
+        this.registeredAt = registeredAt;
+    }
 
     // Lifecycle callbacks
 

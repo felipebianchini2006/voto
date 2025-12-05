@@ -10,8 +10,8 @@ import {
     Chip
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { electionService } from '../services/electionService';
-import { Election } from '../types';
+import { electionService } from '../../services/electionService';
+import type { Election } from '../../types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
@@ -33,7 +33,7 @@ export const VoterDashboard: React.FC = () => {
 
             <Grid container spacing={3}>
                 {elections?.map((election: Election) => (
-                    <Grid item xs={12} md={6} lg={4} key={election.id}>
+                    <Grid size={{ xs: 12, md: 6, lg: 4 }} key={election.id}>
                         <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                             <CardContent sx={{ flexGrow: 1 }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>

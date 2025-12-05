@@ -16,9 +16,9 @@ import {
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink } from 'react-router-dom';
-import { Plus, Edit, Eye, Play, Square } from 'lucide-react';
-import { electionService } from '../services/electionService';
-import { Election } from '../types';
+import { Plus, Edit, Eye } from 'lucide-react';
+import { electionService } from '../../services/electionService';
+import type { Election } from '../../types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

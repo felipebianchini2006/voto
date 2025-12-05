@@ -3,6 +3,8 @@ package com.votoeletronico.voto.domain.audit;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
@@ -36,6 +38,7 @@ public class AuditLog {
 
     @NotNull
     @Column(name = "event_data", nullable = false, columnDefinition = "JSONB")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String eventData;
 
     @NotNull

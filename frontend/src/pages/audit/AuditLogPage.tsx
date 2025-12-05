@@ -11,14 +11,14 @@ import {
     TableRow,
     Chip,
     Button,
-    Alert,
-    Collapse
+    Alert
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { auditService, AuditLogEntry } from '../../services/auditService';
+import { auditService } from '../../services/auditService';
+import type { AuditLogEntry } from '../../services/auditService';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
+import { CheckCircle, AlertTriangle, RefreshCw, ShieldCheck } from 'lucide-react';
 
 export const AuditLogPage: React.FC = () => {
     const { data: logs, isLoading, refetch } = useQuery({
@@ -105,5 +105,3 @@ export const AuditLogPage: React.FC = () => {
         </Box>
     );
 };
-
-import { ShieldCheck } from 'lucide-react';

@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Election, CreateElectionRequest, CreateCandidateRequest, Candidate } from '../types';
+import type { Election, CreateElectionRequest, CreateCandidateRequest, Candidate } from '../types';
 
 export const electionService = {
     getAll: async () => {

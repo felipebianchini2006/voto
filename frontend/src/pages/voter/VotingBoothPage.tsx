@@ -18,7 +18,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { electionService } from '../../services/electionService';
 import { votingService } from '../../services/votingService';
-import { Candidate } from '../../types';
+import type { Candidate } from '../../types';
 
 const steps = ['Identificação', 'Seleção', 'Confirmação', 'Comprovante'];
 
@@ -109,7 +109,7 @@ export const VotingBoothPage: React.FC = () => {
                         </Typography>
                         <Grid container spacing={2}>
                             {candidates?.map((candidate: Candidate) => (
-                                <Grid item xs={12} sm={6} md={4} key={candidate.id}>
+                                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={candidate.id}>
                                     <Card
                                         sx={{
                                             border: selectedCandidate === candidate.id ? '2px solid #1976d2' : 'none',
@@ -201,7 +201,7 @@ export const VotingBoothPage: React.FC = () => {
                             <Typography variant="subtitle2" gutterBottom>
                                 Seu Comprovante (Hash do Voto):
                             </Typography>
-                            <Typography variant="mono" sx={{ fontFamily: 'monospace', fontWeight: 'bold' }}>
+                            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontWeight: 'bold' }}>
                                 {receipt}
                             </Typography>
                         </Paper>
