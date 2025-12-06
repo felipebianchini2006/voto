@@ -1,10 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { User } from '../types';
 import { api } from '../services/api';
-
-interface User {
-    username: string;
-    roles: string[];
-}
 
 interface AuthContextType {
     user: User | null;
@@ -13,7 +9,7 @@ interface AuthContextType {
     logout: () => void;
     isAuthenticated: boolean;
     isAdmin: boolean;
-    isAuditor: boolean;
+    isCandidate: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,8 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         delete api.defaults.headers.common['Authorization'];
     };
 
-    const isAdmin = user?.roles.includes('ROLE_ADMIN') || false;
-    const isAuditor = user?.roles.includes('ROLE_AUDITOR') || false;
+    const isAdmin = user?.role === 'ADMIN';
+    const isCandidate = user?.role === 'CANDIDATE';
 
     return (
         <AuthContext.Provider value={{
@@ -54,9 +50,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             token,
             login,
             logout,
-            isAuthenticated: !!token,
+            isAuthenticated: !!token && !!user,
             isAdmin,
-            isAuditor
+            isCandidate
         }}>
             {children}
         </AuthContext.Provider>

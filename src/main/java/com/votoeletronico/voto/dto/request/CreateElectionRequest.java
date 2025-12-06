@@ -18,7 +18,7 @@ public record CreateElectionRequest(
         String description,
 
         @NotNull(message = "Start timestamp is required")
-        @Future(message = "Start timestamp must be in the future")
+        @FutureOrPresent(message = "Start timestamp cannot be in the past")
         @Schema(description = "Election start date and time", example = "2025-12-15T08:00:00Z")
         Instant startTs,
 

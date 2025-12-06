@@ -7,50 +7,49 @@ import {
   Button,
   Container,
   Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Link as MuiLink,
+  CircularProgress,
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/AuthContext';
+import { authService } from '../services/authService';
 import { Lock } from '@mui/icons-material';
 
 export const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
-  const [role, setRole] = useState('ROLE_VOTER');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
-    if (!username.trim()) {
-      setError('Por favor, informe um nome de usuário');
+
+    if (!username.trim() || !password.trim()) {
+      setError('Por favor, preencha todos os campos');
       return;
     }
 
-    // Simulação de login - em produção isso chamaria um endpoint OAuth2
-    const mockToken = `mock-jwt-token-${Date.now()}`;
-    const mockUser = {
-      username,
-      roles: [role],
-    };
-
+    setLoading(true);
     try {
-      login(mockToken, mockUser);
+      const response = await authService.login({ username, password });
+      login(response.token, response.user);
 
-      if (role === 'ROLE_ADMIN') {
+      // Redirecionar baseado no role
+      if (response.user.role === 'ADMIN') {
         navigate('/admin');
-      } else if (role === 'ROLE_AUDITOR') {
-        navigate('/audit');
+      } else if (response.user.role === 'CANDIDATE') {
+        navigate('/candidate');
       } else {
-        navigate('/elections');
+        navigate('/');
       }
-    } catch (err) {
-      setError('Erro ao fazer login. Tente novamente.');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.response?.data?.message || 'Credenciais inválidas. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -87,7 +86,7 @@ export const LoginPage: React.FC = () => {
           </Box>
 
           <Alert severity="info" sx={{ mb: 2 }}>
-            Ambiente de Demonstração: Selecione seu papel.
+            Use admin1/Admin1234 para acessar como administrador
           </Alert>
 
           {error && (
@@ -108,20 +107,22 @@ export const LoginPage: React.FC = () => {
               autoFocus
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              disabled={loading}
             />
 
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Papel</InputLabel>
-              <Select
-                value={role}
-                label="Papel"
-                onChange={(e) => setRole(e.target.value)}
-              >
-                <MenuItem value="ROLE_VOTER">Eleitor</MenuItem>
-                <MenuItem value="ROLE_ADMIN">Administrador</MenuItem>
-                <MenuItem value="ROLE_AUDITOR">Auditor</MenuItem>
-              </Select>
-            </FormControl>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Senha"
+              type="password"
+              id="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={loading}
+            />
 
             <Button
               type="submit"
@@ -129,9 +130,19 @@ export const LoginPage: React.FC = () => {
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
               size="large"
+              disabled={loading}
             >
-              Entrar
+              {loading ? <CircularProgress size={24} /> : 'Entrar'}
             </Button>
+
+            <Box sx={{ textAlign: 'center', mt: 2 }}>
+              <Typography variant="body2" color="text.secondary">
+                Quer se candidatar?{' '}
+                <MuiLink component={Link} to="/register" underline="hover">
+                  Registre-se aqui
+                </MuiLink>
+              </Typography>
+            </Box>
           </Box>
         </Paper>
       </Box>

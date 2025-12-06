@@ -40,26 +40,31 @@ export const MainLayout: React.FC = () => {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             Sistema de Votação Eletrônica
           </Typography>
-          
+
           {isAuthenticated ? (
             <>
               <Button color="inherit" component={RouterLink} to="/">
                 Home
               </Button>
-              {user?.roles.includes('ROLE_ADMIN') && (
-                <Button color="inherit" component={RouterLink} to="/admin">
-                  Admin
-                </Button>
+              {user?.role === 'ADMIN' && (
+                <>
+                  <Button color="inherit" component={RouterLink} to="/admin">
+                    Admin
+                  </Button>
+                  <Button color="inherit" component={RouterLink} to="/audit">
+                    Auditoria
+                  </Button>
+                </>
               )}
-              {(user?.roles.includes('ROLE_ADMIN') || user?.roles.includes('ROLE_AUDITOR')) && (
-                <Button color="inherit" component={RouterLink} to="/audit">
-                  Auditoria
+              {user?.role === 'CANDIDATE' && (
+                <Button color="inherit" component={RouterLink} to="/candidate">
+                  Portal do Candidato
                 </Button>
               )}
               <Button color="inherit" component={RouterLink} to="/elections">
                 Eleições
               </Button>
-              
+
               <IconButton
                 size="large"
                 edge="end"
@@ -76,7 +81,7 @@ export const MainLayout: React.FC = () => {
               >
                 <MenuItem disabled>
                   <Typography variant="body2">
-                    {user?.username} ({user?.roles.join(', ')})
+                    {user?.username} ({user?.role})
                   </Typography>
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>
@@ -86,9 +91,14 @@ export const MainLayout: React.FC = () => {
               </Menu>
             </>
           ) : (
-            <Button color="inherit" component={RouterLink} to="/login">
-              Entrar
-            </Button>
+            <>
+              <Button color="inherit" component={RouterLink} to="/login">
+                Entrar
+              </Button>
+              <Button color="inherit" component={RouterLink} to="/register">
+                Registrar Candidato
+              </Button>
+            </>
           )}
         </Toolbar>
       </AppBar>
