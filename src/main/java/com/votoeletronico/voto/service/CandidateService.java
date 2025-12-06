@@ -297,4 +297,21 @@ public class CandidateService {
                 .map(candidateMapper::toResponse)
                 .toList();
     }
+
+    /**
+     * Find candidate by user ID and election ID
+     */
+    public Candidate findCandidateByUserAndElection(UUID userId, UUID electionId) {
+        return candidateRepository.findByUserIdAndElectionId(userId, electionId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Candidate not found for user " + userId + " in election " + electionId));
+    }
+
+    /**
+     * Get candidate by user ID and election ID (Response DTO)
+     */
+    public CandidateResponse getCandidateByUserAndElection(UUID userId, UUID electionId) {
+        Candidate candidate = findCandidateByUserAndElection(userId, electionId);
+        return candidateMapper.toResponse(candidate);
+    }
 }

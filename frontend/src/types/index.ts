@@ -86,3 +86,22 @@ export interface CandidateResponse extends Candidate {
     userId?: string;
     electionId: string;
 }
+
+// Election Results Types
+export interface CandidateResultResponse {
+    candidateId: string;
+    candidateName: string;
+    ballotNumber: number;
+    voteCount: number;
+    percentage: number;
+}
+
+export interface ElectionResultResponse {
+    electionId: string;
+    electionName: string;
+    totalVotes: number;
+    abstentions: number;
+    validVotes: number;
+    candidateResults: CandidateResultResponse[];
+    tallyCompletedAt: string;
+}

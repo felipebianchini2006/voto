@@ -10,6 +10,8 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ElectionListPage } from './pages/admin/ElectionListPage';
 import { ElectionFormPage } from './pages/admin/ElectionFormPage';
+import { ElectionDetailPage } from './pages/admin/ElectionDetailPage';
+import { ElectionEditPage } from './pages/admin/ElectionEditPage';
 import { VoterDashboard } from './pages/voter/VoterDashboard';
 import { VotingBoothPage } from './pages/voter/VotingBoothPage';
 import { AuditLogPage } from './pages/audit/AuditLogPage';
@@ -53,6 +55,16 @@ function AppRoutes() {
         <Route path="admin/elections/new" element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <ElectionFormPage />
+          </ProtectedRoute>
+        } />
+        <Route path="admin/elections/:id" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <ElectionDetailPage />
+          </ProtectedRoute>
+        } />
+        <Route path="admin/elections/:id/edit" element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <ElectionEditPage />
           </ProtectedRoute>
         } />
 

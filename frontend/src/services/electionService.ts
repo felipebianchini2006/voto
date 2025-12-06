@@ -9,8 +9,8 @@ import type {
 export const electionService = {
   getAll: async (): Promise<Election[]> => {
     try {
-      const response = await api.get<any>('/admin/elections');
-      return response.data.content || response.data || [];
+      const response = await api.get<Election[]>('/public/elections');
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Error fetching elections:', error);
       throw error;
@@ -19,7 +19,8 @@ export const electionService = {
 
   getById: async (id: string): Promise<Election> => {
     try {
-      const response = await api.get<Election>(`/admin/elections/${id}`);
+      // Try public endpoint first, fall back to admin if needed
+      const response = await api.get<Election>(`/public/elections/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching election:', error);

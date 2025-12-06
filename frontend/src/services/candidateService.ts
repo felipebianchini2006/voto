@@ -2,7 +2,9 @@ import type {
   CandidateResponse,
   Election,
   ApplyToElectionRequest,
-  UpdateCandidateProfileRequest
+  UpdateCandidateProfileRequest,
+  CandidateResultResponse,
+  ElectionResultResponse
 } from '../types';
 import { api } from './api';
 
@@ -28,6 +30,16 @@ export const candidateService = {
 
   updateProfile: async (candidateId: string, data: UpdateCandidateProfileRequest): Promise<CandidateResponse> => {
     const response = await api.put<CandidateResponse>(`/candidate/candidates/${candidateId}/profile`, data);
+    return response.data;
+  },
+
+  getElectionResults: async (electionId: string): Promise<ElectionResultResponse> => {
+    const response = await api.get<ElectionResultResponse>(`/candidate/elections/${electionId}/results`);
+    return response.data;
+  },
+
+  getMyStats: async (electionId: string): Promise<CandidateResultResponse> => {
+    const response = await api.get<CandidateResultResponse>(`/candidate/elections/${electionId}/my-stats`);
     return response.data;
   },
 };

@@ -21,8 +21,9 @@ import {
 } from '@mui/material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { candidateService } from '../../services/candidateService';
-import { Edit, ExitToApp, Add } from '@mui/icons-material';
+import { Edit, ExitToApp, Add, BarChart } from '@mui/icons-material';
 import type { Election, ApplyToElectionRequest, UpdateCandidateProfileRequest, CandidateResponse } from '../../types';
+import { CandidateStatsDialog } from '../../components/CandidateStatsDialog';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -43,6 +44,7 @@ export const CandidatePortalPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [statsDialogOpen, setStatsDialogOpen] = useState(false);
   const [selectedElection, setSelectedElection] = useState<Election | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<CandidateResponse | null>(null);
   const [error, setError] = useState('');
@@ -128,6 +130,11 @@ export const CandidatePortalPage: React.FC = () => {
     });
     setEditDialogOpen(true);
     setError('');
+  };
+
+  const handleStatsClick = (candidate: CandidateResponse) => {
+    setSelectedCandidate(candidate);
+    setStatsDialogOpen(true);
   };
 
   const handleApplySubmit = () => {
@@ -221,6 +228,13 @@ export const CandidatePortalPage: React.FC = () => {
                           onClick={() => handleEditClick(candidacy)}
                         >
                           Editar Perfil
+                        </Button>
+                        <Button
+                          size="small"
+                          startIcon={<BarChart />}
+                          onClick={() => handleStatsClick(candidacy)}
+                        >
+                          Ver Estatísticas
                         </Button>
                         <Button
                           size="small"
@@ -403,6 +417,16 @@ export const CandidatePortalPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Stats Dialog */}
+      {selectedCandidate && (
+        <CandidateStatsDialog
+          open={statsDialogOpen}
+          onClose={() => setStatsDialogOpen(false)}
+          electionId={selectedCandidate.electionId}
+          electionName={selectedCandidate.name}
+        />
+      )}
     </Container>
   );
 };
