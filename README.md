@@ -17,10 +17,6 @@ Sistema seguro de votação eletrônica com preservação da privacidade do elei
 ```bash
 # Iniciar sistema completo
 docker-compose up -d
-
-# Ou use o helper
-docker.bat start        # Windows
-./docker.sh start       # Linux/Mac
 ```
 
 **Acessar:**
