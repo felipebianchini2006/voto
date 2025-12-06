@@ -1,6 +1,5 @@
 package com.votoeletronico.voto;
 
-import com.votoeletronico.voto.config.TestSecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,12 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
  * - Active test profile
  * - Transactional rollback between tests
  * - MockMvc auto-configuration
- * - Test security configuration with mock JWT decoder
+ * - JWT-based authentication with @WithMockUser
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestcontainersConfiguration.class, TestSecurityConfig.class})
+@Import({TestcontainersConfiguration.class})
 @Transactional
 @WithMockUser(roles = {"ADMIN", "OPERATOR", "AUDITOR"})
 public abstract class BaseIntegrationTest {

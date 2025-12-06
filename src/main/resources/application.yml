@@ -63,6 +63,14 @@ logging:
     com.votoeletronico.voto: DEBUG
     org.springframework.security: DEBUG
 
+# JWT Configuration
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-this-secret-in-production-must-be-at-least-256-bits-long-for-hs256}
+    expiration-ms: 86400000  # 24 hours
+    refresh-expiration-ms: 604800000  # 7 days
+    issuer: voto-system
+
 ---
 # Development Profile
 spring:
@@ -85,13 +93,6 @@ spring:
     properties:
       hibernate:
         generate_statistics: false
-
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${OAUTH2_ISSUER_URI:http://localhost:8081/realms/voto}
-          jwk-set-uri: ${OAUTH2_JWK_SET_URI:http://localhost:8081/realms/voto/protocol/openid-connect/certs}
 
 server:
   error:
@@ -136,13 +137,6 @@ spring:
 
   jpa:
     show-sql: false
-
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${OAUTH2_ISSUER_URI}
-          jwk-set-uri: ${OAUTH2_JWK_SET_URI}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -192,13 +186,6 @@ spring:
     properties:
       hibernate:
         generate_statistics: true
-
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${OAUTH2_ISSUER_URI}
-          jwk-set-uri: ${OAUTH2_JWK_SET_URI}
 
 server:
   port: ${SERVER_PORT:8080}

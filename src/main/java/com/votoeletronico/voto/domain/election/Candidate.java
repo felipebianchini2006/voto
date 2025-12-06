@@ -1,13 +1,20 @@
 package com.votoeletronico.voto.domain.election;
 
 import com.votoeletronico.voto.domain.BaseEntity;
+import com.votoeletronico.voto.domain.user.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.util.UUID;
+
 /**
- * Candidate entity representing a voting option in an election
+ * Candidate entity representing a voting option in an election.
+ *
+ * Candidates can be created in two ways:
+ * 1. Admin-created: No user association (user_id = null)
+ * 2. Self-registered: Linked to a User account (user_id set)
  */
 @Entity
 @Table(name = "candidates",
@@ -31,6 +38,11 @@ public class Candidate extends BaseEntity {
     @JsonIgnore
     private Election election;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", foreignKey = @ForeignKey(name = "fk_candidate_user"))
+    @JsonIgnore
+    private User user;
+
     @NotBlank(message = "Candidate name is required")
     @Size(min = 2, max = 255, message = "Candidate name must be between 2 and 255 characters")
     @Column(name = "name", nullable = false)
@@ -49,6 +61,10 @@ public class Candidate extends BaseEntity {
     @Column(name = "photo_url", length = 500)
     private String photoUrl;
 
+    @Size(max = 100, message = "Party must not exceed 100 characters")
+    @Column(name = "party", length = 100)
+    private String party;
+
     // Business methods
 
     /**
@@ -64,6 +80,20 @@ public class Candidate extends BaseEntity {
      */
     public boolean canBeModified() {
         return election != null && election.canBeModified();
+    }
+
+    /**
+     * Check if this candidate has a user account (self-registered)
+     */
+    public boolean hasUserAccount() {
+        return user != null;
+    }
+
+    /**
+     * Check if this candidate belongs to a specific user
+     */
+    public boolean belongsToUser(UUID userId) {
+        return user != null && user.getId() != null && user.getId().equals(userId);
     }
 
     @Override

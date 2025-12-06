@@ -66,4 +66,35 @@ public interface CandidateRepository extends JpaRepository<Candidate, UUID> {
             @Param("electionId") UUID electionId,
             @Param("searchTerm") String searchTerm
     );
+
+    // ============================================================================
+    // User-related queries (for candidate portal)
+    // ============================================================================
+
+    /**
+     * Find all candidates created by a specific user
+     */
+    List<Candidate> findByUserId(UUID userId);
+
+    /**
+     * Find candidate by user and election
+     */
+    Optional<Candidate> findByUserIdAndElectionId(UUID userId, UUID electionId);
+
+    /**
+     * Check if user already has a candidate in this election
+     */
+    boolean existsByUserIdAndElectionId(UUID userId, UUID electionId);
+
+    /**
+     * Count active (RUNNING) elections for a user
+     * Used to enforce "1 active election per candidate" rule
+     */
+    @Query("""
+            SELECT COUNT(c) FROM Candidate c
+            JOIN c.election e
+            WHERE c.user.id = :userId
+            AND e.status = 'RUNNING'
+            """)
+    long countActiveElectionsForUser(@Param("userId") UUID userId);
 }
