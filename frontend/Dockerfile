@@ -5,10 +5,15 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json package-lock.json* ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Remove rolldown-vite override and use standard Vite 5
+RUN npm pkg delete overrides && \
+    npm pkg set devDependencies.vite="^5.4.11" && \
+    rm -f package-lock.json
+
+# Install all dependencies (including devDependencies for build)
+RUN npm install
 
 # Copy source code
 COPY . .

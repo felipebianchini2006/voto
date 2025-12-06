@@ -17,9 +17,6 @@ COPY src ./src
 # Build application (skip tests for faster build - tests run in CI)
 RUN ./mvnw clean package -DskipTests -B
 
-# Extract layers for better caching
-RUN java -Djarmode=layertools -jar target/*.jar extract
-
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine AS runtime
 
@@ -31,11 +28,8 @@ RUN apk --no-cache add curl
 
 WORKDIR /app
 
-# Copy extracted layers from builder
-COPY --from=builder /app/dependencies/ ./
-COPY --from=builder /app/spring-boot-loader/ ./
-COPY --from=builder /app/snapshot-dependencies/ ./
-COPY --from=builder /app/application/ ./
+# Copy the built JAR file from builder
+COPY --from=builder /app/target/*.jar app.jar
 
 # Create logs directory
 RUN mkdir -p /app/logs && chown -R spring:spring /app
@@ -60,4 +54,4 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -Djava.security.egd=file:/dev/./urandom"
 
 # Run application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
